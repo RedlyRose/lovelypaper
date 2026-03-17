@@ -15,14 +15,24 @@ export async function onRequestGet(context) {
       listOptions.delimiter = '/';
     }
 
-    const result = await env.R2.list(listOptions);
+    const MIME_TYPES = {
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+      gif: 'image/gif', webp: 'image/webp', avif: 'image/avif',
+      svg: 'image/svg+xml', bmp: 'image/bmp',
+      mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
+      mkv: 'video/x-matroska', avi: 'video/x-msvideo', m4v: 'video/x-m4v',
+    };
 
-    const objects = (result.objects || []).map(obj => ({
-      key: obj.key,
-      size: obj.size,
-      uploaded: obj.uploaded,
-      contentType: obj.httpMetadata?.contentType || '',
-    }));
+    const objects = (result.objects || []).map(obj => {
+      const ext = obj.key.split('.').pop().toLowerCase();
+      const guessedMime = MIME_TYPES[ext] || 'application/octet-stream';
+      return {
+        key: obj.key,
+        size: obj.size,
+        uploaded: obj.uploaded,
+        contentType: obj.httpMetadata?.contentType || guessedMime,
+      };
+    });
 
     const prefixes = result.delimitedPrefixes || [];
 

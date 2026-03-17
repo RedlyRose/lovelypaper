@@ -7,7 +7,7 @@
     "dev:remote": "wrangler pages dev public --compatibility-date=2024-09-23 --remote",
     "deploy": "wrangler pages deploy public",
     "migrate:local": "wrangler d1 migrations apply media --local",
-    "migrate:prod": "wrangler d1 migrations apply media"
+    "migrate:prod": "wrangler d1 migrations apply media --remote"
   },
   "devDependencies": {
     "wrangler": "^3.91.0"

@@ -17,13 +17,17 @@ const lightboxContent = document.getElementById("lightbox-content");
 const lightboxClose = document.getElementById("lightbox-close");
 
 // Utility: is image
-function isImage(contentType) {
-  return contentType.startsWith("image/");
+function isImage(obj) {
+  const type = obj.contentType || "";
+  if (type.startsWith("image/")) return true;
+  return /\.(jpg|jpeg|png|gif|webp|svg|avif|bmp)$/i.test(obj.key);
 }
 
 // Utility: is video
-function isVideo(contentType) {
-  return contentType.startsWith("video/");
+function isVideo(obj) {
+  const type = obj.contentType || "";
+  if (type.startsWith("video/")) return true;
+  return /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(obj.key);
 }
 
 // Build URL for a key
@@ -45,7 +49,7 @@ async function fetchAll(prefix = "") {
 // Fetches all files, grabs recent images
 async function setupMarquee(allObjects) {
   const images = allObjects.filter(
-    (obj) => isImage(obj.contentType) && !obj.key.startsWith("albums/"),
+    (obj) => isImage(obj) && !obj.key.startsWith("albums/"),
   );
 
   // Sort reverse chronologically (assuming 'uploaded' or just trust R2 order mostly)
@@ -108,7 +112,7 @@ function setupAlbums(allObjects) {
     // Check if cover
     if (
       fileName.toLowerCase().startsWith("cover") &&
-      isImage(obj.contentType)
+      isImage(obj)
     ) {
       data.coverUrl = getUrl(obj.key);
     }
@@ -120,7 +124,7 @@ function setupAlbums(allObjects) {
     if (parts.length < 3) return;
     const albumName = parts[1];
     const data = albumsMap.get(albumName);
-    if (!data.coverUrl && isImage(obj.contentType)) {
+    if (!data.coverUrl && isImage(obj)) {
       data.coverUrl = getUrl(obj.key);
     }
   });
@@ -160,7 +164,7 @@ function setupAlbums(allObjects) {
 // 3. Setup Videos
 // Fetches all videos in bucket
 function setupVideos(allObjects) {
-  const videos = allObjects.filter((obj) => isVideo(obj.contentType));
+  const videos = allObjects.filter((obj) => isVideo(obj));
   videos.sort((a, b) => new Date(b.uploaded || 0) - new Date(a.uploaded || 0));
 
   if (videos.length === 0) {
