@@ -10,6 +10,8 @@ const state = {
   folders: [], // sub-folder prefixes in current folder
   allFolders: [], // flat list of all known folders (for move picker)
   selectedFileKey: null, // key of right-clicked / context file
+  selectedItems: new Set(), // keys of selected files for bulk action
+  isBulkAction: false, // flag for move modal
   lightboxIndex: 0, // index into mediaFiles array
   viewMode: "grid", // 'grid' | 'list'
 };
@@ -67,6 +69,8 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadFiles(prefix = "") {
   showLoading(true);
   state.currentPath = prefix;
+  state.selectedItems.clear();
+  updateBulkActions();
   updateBreadcrumbs(prefix);
   updateFolderTree(prefix);
 
@@ -160,6 +164,12 @@ function createFileCard(file, idx) {
   div.addEventListener("click", (e) => {
     if (e.target.classList.contains("card-select")) {
       div.classList.toggle("selected");
+      if (div.classList.contains("selected")) {
+        state.selectedItems.add(file.key);
+      } else {
+        state.selectedItems.delete(file.key);
+      }
+      updateBulkActions();
       return;
     }
     openLightbox(file, idx);
@@ -384,6 +394,55 @@ function setupViewToggle() {
   });
 }
 
+// ── Bulk Actions ───────────────────────────────────────────
+function updateBulkActions() {
+  const bulkBar = $("bulk-actions");
+  const countSpan = $("bulk-count");
+  if (state.selectedItems.size > 0) {
+    bulkBar.classList.remove("hidden");
+    countSpan.textContent = `${state.selectedItems.size} selected`;
+  } else {
+    bulkBar.classList.add("hidden");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  $("btn-bulk-clear")?.addEventListener("click", () => {
+    state.selectedItems.clear();
+    document.querySelectorAll(".file-card.selected").forEach((el) => {
+      el.classList.remove("selected");
+    });
+    updateBulkActions();
+  });
+
+  $("btn-bulk-delete")?.addEventListener("click", async () => {
+    if (!confirm(`Delete ${state.selectedItems.size} items?`)) return;
+    const keys = Array.from(state.selectedItems);
+    showLoading(true);
+    try {
+      await Promise.all(
+        keys.map((key) =>
+          fetch("/api/files/delete", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key }),
+          }),
+        ),
+      );
+      showToast(`Deleted ${keys.length} items`, "success");
+      await loadFiles(state.currentPath);
+    } catch (err) {
+      showToast("Bulk delete failed", "error");
+    }
+  });
+
+  $("btn-bulk-move")?.addEventListener("click", () => {
+    state.isBulkAction = true;
+    populateMovePicker();
+    openModal("modal-move");
+  });
+});
+
 // ── Context menu ───────────────────────────────────────────
 function setupContextMenu() {
   $("ctx-open").addEventListener("click", () => {
@@ -401,6 +460,7 @@ function setupContextMenu() {
 
   $("ctx-move").addEventListener("click", () => {
     hideCtxMenu();
+    state.isBulkAction = false;
     populateMovePicker();
     openModal("modal-move");
   });
@@ -536,22 +596,38 @@ function setupModals() {
       : customPath.replace(/^\/|\/$/g, "");
     closeModal("modal-move");
 
-    const oldKey = state.selectedFileKey;
-    const name = fileName(oldKey);
-    const destKey = destFolder ? `${destFolder}/${name}` : name;
+    const keysToMove = state.isBulkAction
+      ? Array.from(state.selectedItems)
+      : [state.selectedFileKey];
 
+    if (keysToMove.length === 0) return;
+
+    showLoading(true);
     try {
-      const res = await fetch("/api/files/move", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sourceKey: oldKey, destKey }),
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error);
-      showToast("Moved successfully", "success");
+      await Promise.all(
+        keysToMove.map(async (oldKey) => {
+          const name = fileName(oldKey);
+          const destKey = destFolder ? `${destFolder}/${name}` : name;
+          const res = await fetch("/api/files/move", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sourceKey: oldKey, destKey }),
+          });
+          const data = await res.json();
+          if (!data.success) throw new Error(data.error || "Move error");
+        }),
+      );
+      showToast(`Moved ${keysToMove.length} items`, "success");
+      // clear selection if it was a bulk action
+      if (state.isBulkAction) {
+        state.selectedItems.clear();
+        state.isBulkAction = false;
+        updateBulkActions();
+      }
       await loadFiles(state.currentPath);
     } catch (err) {
       showToast("Move failed: " + err.message, "error");
+      showLoading(false);
     }
   });
 }
