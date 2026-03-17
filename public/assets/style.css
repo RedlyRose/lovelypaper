@@ -582,6 +582,10 @@ body {
   border-color: var(--accent);
 }
 
+.file-grid.selection-mode .card-select {
+  opacity: 1;
+}
+
 /* Folder Cards */
 .folder-card {
   background: var(--bg-elevated);
@@ -815,11 +819,52 @@ body {
   background: var(--bg-glass-hov);
   color: var(--text-primary);
 }
-.ctx-item.danger {
-  color: var(--danger);
-}
 .ctx-item.danger:hover {
   background: var(--danger-dim);
+}
+
+/* ── Dropdowns ───────────────────────────────────────────── */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-hov);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  z-index: 500;
+  min-width: 140px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  animation: ctxIn 0.12s ease;
+}
+
+.dropdown-menu.hidden {
+  display: none !important;
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition);
+}
+
+.dropdown-item:hover {
+  background: var(--bg-glass-hov);
+  color: var(--text-primary);
 }
 
 /* ── Modals ──────────────────────────────────────────────── */

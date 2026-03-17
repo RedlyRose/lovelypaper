@@ -60,6 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupDrop();
   setupUpload();
   setupViewToggle();
+  setupSelectionDropdown();
   setupContextMenu();
   setupModals();
   setupLightbox();
@@ -394,6 +395,35 @@ function setupViewToggle() {
   });
 }
 
+// ── Selection Dropdown ─────────────────────────────────────
+function setupSelectionDropdown() {
+  const toggle = $("btn-select-toggle");
+  const menu = $("select-menu");
+
+  toggle?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    menu.classList.toggle("hidden");
+  });
+
+  document.addEventListener("click", () => menu?.classList.add("hidden"));
+
+  $("btn-select-all")?.addEventListener("click", () => {
+    state.files.forEach((file) => state.selectedItems.add(file.key));
+    document
+      .querySelectorAll(".file-card")
+      .forEach((card) => card.classList.add("selected"));
+    updateBulkActions();
+  });
+
+  $("btn-select-none")?.addEventListener("click", () => {
+    state.selectedItems.clear();
+    document
+      .querySelectorAll(".file-card")
+      .forEach((card) => card.classList.remove("selected"));
+    updateBulkActions();
+  });
+}
+
 // ── Bulk Actions ───────────────────────────────────────────
 function updateBulkActions() {
   const bulkBar = $("bulk-actions");
@@ -401,8 +431,10 @@ function updateBulkActions() {
   if (state.selectedItems.size > 0) {
     bulkBar.classList.remove("hidden");
     countSpan.textContent = `${state.selectedItems.size} selected`;
+    fileGrid.classList.add("selection-mode");
   } else {
     bulkBar.classList.add("hidden");
+    fileGrid.classList.remove("selection-mode");
   }
 }
 
