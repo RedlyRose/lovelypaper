@@ -15,6 +15,8 @@ export async function onRequestGet(context) {
       listOptions.delimiter = '/';
     }
 
+    const result = await env.R2.list(listOptions);
+
     const MIME_TYPES = {
       jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
       gif: 'image/gif', webp: 'image/webp', avif: 'image/avif',
