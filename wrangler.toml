@@ -1,0 +1,13 @@
+name = "chinra"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "public"
+account_id = "d68814484e2c8389f8c7d665c4734fd1"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "media"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "media"
+database_id = "62bd17e6-8959-43b8-9749-43927538b157"
