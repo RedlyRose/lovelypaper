@@ -3,11 +3,19 @@ export async function onRequestGet(context) {
   const url = new URL(request.url);
   const prefix = url.searchParams.get('prefix') || '';
 
+  const recursive = url.searchParams.get('recursive') === 'true';
+
   try {
-    const result = await env.R2.list({
+    const listOptions = {
       prefix: prefix,
-      delimiter: '/',
-    });
+    };
+    
+    // Only use delimiter if not recursive
+    if (!recursive) {
+      listOptions.delimiter = '/';
+    }
+
+    const result = await env.R2.list(listOptions);
 
     const objects = (result.objects || []).map(obj => ({
       key: obj.key,
