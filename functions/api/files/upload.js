@@ -1,3 +1,18 @@
+const MIME_TYPES = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+  gif: 'image/gif', webp: 'image/webp', avif: 'image/avif',
+  svg: 'image/svg+xml', bmp: 'image/bmp',
+  mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
+  mkv: 'video/x-matroska', avi: 'video/x-msvideo', m4v: 'video/x-m4v',
+  mp3: 'audio/mpeg', ogg: 'audio/ogg', wav: 'audio/wav',
+  pdf: 'application/pdf', zip: 'application/zip',
+};
+
+function guessMime(fileName) {
+  const ext = fileName.split('.').pop().toLowerCase();
+  return MIME_TYPES[ext] || 'application/octet-stream';
+}
+
 export async function onRequestPost(context) {
   const { env, request } = context;
 
@@ -12,8 +27,13 @@ export async function onRequestPost(context) {
 
     const fileName = file.name;
     const key = folder ? `${folder}/${fileName}` : fileName;
-    const contentType = file.type || 'application/octet-stream';
 
+    // Always resolve content type — browser sometimes sends empty string
+    const contentType = (file.type && file.type !== 'application/octet-stream')
+      ? file.type
+      : guessMime(fileName);
+
+    // Upload to R2
     await env.R2.put(key, file.stream(), {
       httpMetadata: { contentType },
     });
@@ -23,10 +43,15 @@ export async function onRequestPost(context) {
       : contentType.startsWith('video/') ? 'video'
       : 'other';
 
-    await env.DB.prepare(
-      `INSERT OR REPLACE INTO files (r2_key, display_name, folder, type, size_bytes, mime_type)
-       VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(key, fileName, folder || '/', fileType, file.size, contentType).run();
+    try {
+      await env.DB.prepare(
+        `INSERT OR REPLACE INTO files (r2_key, display_name, folder, type, size_bytes, mime_type)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      ).bind(key, fileName, folder || '/', fileType, file.size, contentType).run();
+    } catch (dbErr) {
+      // D1 failure is non-fatal — file is already in R2
+      console.error('D1 insert failed:', dbErr.message);
+    }
 
     return Response.json({ success: true, key, contentType });
   } catch (err) {
