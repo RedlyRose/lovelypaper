@@ -164,9 +164,9 @@ function setupAlbums(allObjects) {
       </div>
     `;
 
-    // Click navigates to dashboard inside that folder
+    // Click navigates to the specialized album viewer page
     div.onclick = () => {
-      window.location.href = `/dashboard.html?path=${encodeURIComponent(albumsPrefix + name)}`;
+      window.location.href = `/album.html?path=${encodeURIComponent(albumsPrefix + name)}`;
     };
 
     albumsGrid.appendChild(div);

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinra — Album</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/home.css">
+    <style>
+        .album-header {
+            padding: 4rem 2rem 2rem;
+            text-align: center;
+        }
+        .album-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .album-stats {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+        .gallery-grid {
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .gallery-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s;
+        }
+        .gallery-item:hover {
+            transform: scale(1.02);
+            border-color: var(--accent);
+        }
+        .gallery-item img, .gallery-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="home-body">
+    <nav class="home-nav">
+        <div class="logo">
+            <span class="logo-icon">⬡</span>
+            <span class="logo-text">Chinra</span>
+        </div>
+        <a href="/" class="btn ghost small">← Back to Home</a>
+    </nav>
+
+    <main>
+        <header class="album-header">
+            <h1 id="album-display-name" class="album-title">Album Name</h1>
+            <p id="album-display-stats" class="album-stats">0 items</p>
+        </header>
+
+        <section id="gallery-grid" class="gallery-grid">
+            <!-- Items injected here -->
+        </section>
+    </main>
+
+    <!-- Shared Lightbox -->
+    <div id="lightbox" class="lightbox hidden">
+        <button id="lightbox-close" class="lightbox-close">✕</button>
+        <div id="lightbox-content" class="lightbox-content"></div>
+    </div>
+
+    <script src="/assets/album.js"></script>
+</body>
+</html>
