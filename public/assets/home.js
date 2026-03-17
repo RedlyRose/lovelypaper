@@ -49,7 +49,7 @@ async function fetchAll(prefix = "") {
 // Fetches all files, grabs recent images
 async function setupMarquee(allObjects) {
   const images = allObjects.filter(
-    (obj) => isImage(obj) && !obj.key.startsWith("albums/"),
+    (obj) => isImage(obj) && !obj.key.toLowerCase().startsWith("albums/"),
   );
 
   // Sort reverse chronologically (assuming 'uploaded' or just trust R2 order mostly)
@@ -86,9 +86,21 @@ async function setupMarquee(allObjects) {
 // 2. Setup Albums
 // Scans for 'albums/*/', counts items, looks for cover
 function setupAlbums(allObjects) {
-  // Find all keys starting with albums/
+  // Determine the actual casing of the "albums/" folder in the bucket
+  const firstAlbumPath = allObjects.find((obj) =>
+    obj.key.toLowerCase().startsWith("albums/"),
+  );
+  if (!firstAlbumPath) {
+    albumsGrid.innerHTML = `<div style="color:var(--text-muted); padding:1rem 0;">No albums found. Make sure you have an "albums" folder.</div>`;
+    return;
+  }
+
+  // Get the actual prefix (e.g., "Albums/" or "albums/")
+  const albumsPrefix = firstAlbumPath.key.split("/")[0] + "/";
+
+  // Find all keys starting with that prefix
   const albumKeys = allObjects.filter(
-    (obj) => obj.key.startsWith("albums/") && obj.key !== "albums/",
+    (obj) => obj.key.startsWith(albumsPrefix) && obj.key !== albumsPrefix,
   );
 
   // Group by album name
@@ -154,7 +166,7 @@ function setupAlbums(allObjects) {
 
     // Click navigates to dashboard inside that folder
     div.onclick = () => {
-      window.location.href = `/dashboard.html?path=albums/${encodeURIComponent(name)}`;
+      window.location.href = `/dashboard.html?path=${encodeURIComponent(albumsPrefix + name)}`;
     };
 
     albumsGrid.appendChild(div);
